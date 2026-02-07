@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Inverto Challenge</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+  font-family:'Poppins',sans-serif;
+}
+body{
+  height:100vh;
+  background:linear-gradient(135deg,#000000,#1a1a1a);
+  color:white;
+  overflow:hidden;
+}
+.front-page{
+  position:fixed;
+  width:100%;
+  height:100vh;
+  background:linear-gradient(135deg,#000000,#1a1a1a);
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  flex-direction:column;
+  z-index:2;       
+}
+.front-banner{
+  position:absolute;
+  top:15px;
+  width:100%;
+  text-align:center;
+}
+.front-banner img{
+  width:60%;
+  max-height:80px;
+  object-fit:contain;
+  opacity:0.9;
+}
+.bg-logo{
+  position:fixed;
+  top:50%;
+  left:50%;
+  transform:translate(-50%,-50%);
+  width:500px;
+  opacity:0.12;
+  z-index:1;             
+  pointer-events:none;
+}
+.front-content{
+  text-align:center;
+  z-index:3;
+  position:relative;
+}
+.front-content h1{
+  font-size:70px;
+  letter-spacing:6px;
+  font-weight:700;
+  background:linear-gradient(90deg,#00ffcc,#00b3ff);
+  background-clip:text;
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
+  color:transparent;
+}
+.front-content p{
+  margin-top:10px;
+  font-size:18px;
+  opacity:0.8;
+}
+.front-content button{
+  margin-top:25px;
+  padding:12px 35px;
+  border:none;
+  border-radius:30px;
+  background:#00ffcc;
+  font-weight:600;
+  cursor:pointer;
+}
+.container{
+  width:750px;
+  background:rgba(255,255,255,0.08);
+  backdrop-filter:blur(12px);
+  border-radius:20px;
+  padding:35px;
+  box-shadow:0 0 40px rgba(0,0,0,0.6);
+  position:absolute;
+  top:50%;
+  left:50%;
+  transform:translate(-50%,-50%);
+}
+h2{
+  text-align:center;
+  margin-bottom:20px;
+}
+input, textarea{
+  width:100%;
+  padding:12px;
+  margin:10px 0;
+  border:none;
+  border-radius:10px;
+  outline:none;
+}
+textarea{
+  height:120px;
+  resize:none;
+}
+button{
+  padding:12px 30px;
+  border:none;
+  border-radius:25px;
+  cursor:pointer;
+  font-weight:600;
+  margin-top:15px;
+}
+.start-btn{ background:#00ffcc; }
+.next-btn{ background:#ff9800; }
+.submit-btn{ background:#00ffcc; }
+button:disabled{
+  background:gray;
+  cursor:not-allowed;
+}
+#quizSection{ display:none; }
+#mainContent{ display:none; }
+</style>
+</head>
+<body>
+<img src="kalam_logo.png.png" class="bg-logo" alt="image">
+<div id="frontPage" class="front-page">
+<img src="kalam_logo.png.png" class="bg-logo" alt="image">
+  <div class="front-banner">
+    <img src="sri_shakthi_banner.jpeg.jpeg">
+  </div>
+  <div class="front-content">
+    <h1>INVERTO</h1>
+    <p>Logic & Coding Challenge</p>
+    <button onclick="enterEvent()">Start Event</button>
+  </div>
+</div>
+<div id="mainContent">
+<div class="container">
+<div id="registerSection">
+  <h2>INVERTO Registration</h2>
+  <input type="text" id="name" placeholder="Enter Your Name" required>
+  <input type="text" id="college" placeholder="Enter College Name" required>
+  <input type="tel" id="phone" placeholder="Enter Phone Number" required>
+  <button class="start-btn" onclick="startQuiz()">Start Challenge</button>
+</div>
+<div id="quizSection">
+  <h2>INVERTO Challenge</h2>
+  <p id="timer">Time: 15:00</p>
+  <div>
+    <h3 id="question"></h3>
+  </div>
+  <textarea id="answer" placeholder="Write your logic or Code here..."></textarea>
+  <button class="next-btn" onclick="nextQ()">Next</button>
+  <button class="submit-btn" onclick="generatePDF()">Final Submit</button>
+</div>
+</div>
+</div>
+<script>
+const { jsPDF } = window.jspdf;
+let student = {};
+let questions = [
+"Input: 5 -> Output: 25",
+"Input: 123 -> Output: 321",
+"Input: 4 -> Output: 1 12 123 1234"
+];
+let answers = [];
+let index = 0;
+let isSubmitted = false;
+let totalTime = 900;
+let timeLeft;
+let timer;
+function enterEvent(){
+  document.getElementById("frontPage").style.display="none";
+  document.getElementById("mainContent").style.display="block";
+}
+function startQuiz(){
+  let name = document.getElementById("name").value.trim();
+  let college = document.getElementById("college").value.trim();
+  let phone = document.getElementById("phone").value.trim();
+  if(name==="" || college==="" || phone===""){
+    alert("Please fill all details!");
+    return;
+  }
+  student = {name, college, phone};
+  document.getElementById("registerSection").style.display="none";
+  document.getElementById("quizSection").style.display="block";
+  document.getElementById("question").innerText = questions[index];
+  timeLeft = totalTime;
+  timer = setInterval(()=>{
+    let m = Math.floor(timeLeft/60);
+    let s = timeLeft%60;
+    s = s < 10 ? "0"+s : s;
+    document.getElementById("timer").innerText = "Time: "+m+":"+s;
+    timeLeft--;
+    if(timeLeft < 0){
+      clearInterval(timer);
+      generatePDF();
+    }
+  },1000);
+}
+function nextQ(){
+  if(isSubmitted) return;
+  answers[index] = document.getElementById("answer").value;
+  index++;
+  if(index < questions.length){
+    document.getElementById("question").innerText = questions[index];
+    document.getElementById("answer").value = answers[index] || "";
+  }else{
+    alert("All questions completed. Click Final Submit.");
+  }
+}
+function generatePDF(){
+  if(isSubmitted) return;
+  isSubmitted = true;
+  clearInterval(timer);
+  answers[index] = document.getElementById("answer").value;
+  document.querySelector(".submit-btn").disabled=true;
+  document.querySelector(".next-btn").disabled=true;
+  document.getElementById("answer").disabled=true;
+  let timeTaken = totalTime - timeLeft;
+  let minutes = Math.floor(timeTaken/60);
+  let seconds = timeTaken%60;
+  seconds = seconds < 10 ? "0"+seconds : seconds;
+  let formattedTime = minutes + ":" + seconds;
+  const doc = new jsPDF();
+  let y = 20;
+  doc.setFontSize(18);
+  doc.text("INVERTO - Logic Challenge Result", 20, y);
+  y+=15;
+  doc.setFontSize(12);
+  doc.text("Name: " + student.name,20,y); y+=8;
+  doc.text("College: " + student.college,20,y); y+=8;
+  doc.text("Phone: " + student.phone,20,y); y+=12;
+  for(let i=0;i<questions.length;i++){
+    doc.text("Question "+(i+1)+":",20,y);
+    y+=7;
+    let q = doc.splitTextToSize(questions[i],170);
+    doc.text(q,20,y);
+    y+=q.length*7 + 5;
+    doc.text("Answer:",20,y);
+    y+=7;
+    let a = doc.splitTextToSize(answers[i] || "Not Answered",170);
+    doc.text(a,20,y);
+    y+=a.length*7 + 10;
+    if(y>270){
+      doc.addPage();
+      y=20;
+    }
+  }
+  doc.text("Total Time: 15:00",20,y); y+=8;
+  doc.text("Time Taken: "+formattedTime,20,y); y+=8;
+  doc.text("Submitted On: "+new Date().toLocaleString(),20,y);
+  doc.save(student.name+"_Inverto_Result.pdf");
+}
+</script>
+</body>
+</html>
